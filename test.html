@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Text Summarizer</title>
+</head>
+<body>
+	<h1>Text Summarizer</h1>
+	<form>
+		<label for="file">Upload a text file:</label>
+		<input type="file" id="file" name="file">
+		<label for="num-sentences">Number of sentences in summary:</label>
+		<input type="number" id="num-sentences" name="num-sentences" value="3" min="1" max="10">
+		<button type="button" onclick="summarize()">Summarize</button>
+	</form>
+	<div id="summary"></div>
+	<script>
+		function summarize() {
+			const fileInput = document.getElementById("file");
+			const file = fileInput.files[0];
+			const reader = new FileReader();
+			reader.onload = function(event) {
+				const text = event.target.result;
+				const numSentencesInput = document.getElementById("num-sentences");
+				const numSentences = numSentencesInput.valueAsNumber;
+				const summary = summarizeText(text, numSentences);
+				const summaryDiv = document.getElementById("summary");
+				summaryDiv.innerHTML = summary;
+			};
+			reader.readAsText(file);
+		}
+
+		function summarizeText(text, numSentences) {
+			// Split the text into sentences
+			const sentences = text.split(/[.?!]/);
+
+			// Define the keywords to use for scoring
+			const keywords = ["the", "a", "an", "is", "was", "were", "are", "will", "shall", "would", "should", "can", "could", "may", "might", "must"];
+
+			// Calculate the score of each sentence based on its relevance to the overall text
+			const scores = sentences.map(sentence => {
+				const words = sentence.split(" ");
+				let score = 0;
+				for (const word of words) {
+					if (keywords.includes(word.toLowerCase())) {
+						score += 1;
+					}
+				}
+				return score / words.length;
+			});
+
+			// Sort the sentences by their score, in descending order
+			const sortedSentences = sentences.map((sentence, index) => ({ sentence, score: scores[index] }))
+				.sort((a, b) => b.score - a.score);
+
+			// Select the top n sentences to include in the summary
+			const summarySentences = sortedSentences.slice(0, numSentences).map(obj => obj.sentence);
+
+			// Join the summary sentences back together into a single string
+			const summary = summarySentences.join(". ");
+
+			return summary;
+		}
+	</script>
+</body>
+</html>
